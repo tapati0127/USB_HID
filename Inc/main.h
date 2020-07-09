@@ -60,7 +60,9 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define DO7_Pin GPIO_PIN_3
+#define DO6_Pin GPIO_PIN_3
+#define DO6_GPIO_Port GPIOE
+#define DO7_Pin GPIO_PIN_5
 #define DO7_GPIO_Port GPIOE
 #define DI0_Pin GPIO_PIN_7
 #define DI0_GPIO_Port GPIOC
@@ -68,30 +70,28 @@ void Error_Handler(void);
 #define DI1_GPIO_Port GPIOC
 #define DI2_Pin GPIO_PIN_9
 #define DI2_GPIO_Port GPIOA
-#define DI3_Pin GPIO_PIN_13
+#define DI3_Pin GPIO_PIN_15
 #define DI3_GPIO_Port GPIOA
-#define DI4_Pin GPIO_PIN_15
-#define DI4_GPIO_Port GPIOA
-#define DI5_Pin GPIO_PIN_11
-#define DI5_GPIO_Port GPIOC
-#define DI6_Pin GPIO_PIN_0
+#define DI4_Pin GPIO_PIN_11
+#define DI4_GPIO_Port GPIOC
+#define DI5_Pin GPIO_PIN_0
+#define DI5_GPIO_Port GPIOD
+#define DI6_Pin GPIO_PIN_2
 #define DI6_GPIO_Port GPIOD
-#define DI7_Pin GPIO_PIN_2
+#define DI7_Pin GPIO_PIN_4
 #define DI7_GPIO_Port GPIOD
-#define DO0_Pin GPIO_PIN_4
+#define DO0_Pin GPIO_PIN_6
 #define DO0_GPIO_Port GPIOD
-#define DO1_Pin GPIO_PIN_6
-#define DO1_GPIO_Port GPIOD
-#define DO2_Pin GPIO_PIN_3
+#define DO1_Pin GPIO_PIN_3
+#define DO1_GPIO_Port GPIOB
+#define DO2_Pin GPIO_PIN_5
 #define DO2_GPIO_Port GPIOB
-#define DO3_Pin GPIO_PIN_5
+#define DO3_Pin GPIO_PIN_7
 #define DO3_GPIO_Port GPIOB
-#define DO4_Pin GPIO_PIN_7
+#define DO4_Pin GPIO_PIN_9
 #define DO4_GPIO_Port GPIOB
-#define DO5_Pin GPIO_PIN_9
-#define DO5_GPIO_Port GPIOB
-#define DO6_Pin GPIO_PIN_1
-#define DO6_GPIO_Port GPIOE
+#define DO5_Pin GPIO_PIN_1
+#define DO5_GPIO_Port GPIOE
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

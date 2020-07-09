@@ -43,65 +43,54 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
 
 DAC_HandleTypeDef hdac;
 
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
-TIM_HandleTypeDef htim5;
 
 /* USER CODE BEGIN PV */
 //uint8_t tx_data = 'a';
 struct rx {
 	char header[16];//  = {'T','R','I','E','N','L','O','N','G','T','I','N','H','0','0','0'}
+	uint16_t total_size;
 	uint16_t DO;
-	float dac1;
-	float dac2;
-	float dac3;
-	float dac4;
-	uint16_t pwm1_fre;
-	uint16_t pwm1_duty;
-	uint16_t pwm2_fre;
-	uint16_t pwm2_duty;
-	uint16_t byte_number;
-	uint16_t crc;
-};
-struct rx rx_data;
+	float DAC1_voltage,DAC2_voltage;
+	uint16_t pwm1_fre,pwm2_fre;
+	float pwm1_duty,pwm2_duty;
+} rx_data;
+
+uint16_t adc_value[4];
+
 struct tx {
 	char header[16];//  = {'T','R','I','E','N','L','O','N','G','T','I','N','H','0','0','0'}
+	uint16_t total_size;
 	uint16_t DI;
-	uint16_t adc1;
-	uint16_t adc2;
-	uint16_t adc3;
-	uint16_t adc4;
-	uint16_t byte_number;
-	uint16_t crc;
+	uint16_t ADC1_value;
+	uint16_t ADC2_value;
+	uint16_t ADC3_value;
+	uint16_t ADC4_value;
 };
 struct tx tx_data = {
 	{'T','R','I','E','N','L','O','N','G','T','I','N','H','0','0','0'},
-	0,
-	0,
-	0,
-	0,
-	0,
-	30,
-	0
+	28
 };
-int tx_number = sizeof(tx_data);
-int rx_number = sizeof(rx_data);
-
+int tx_number;
+int rx_number;
+uint16_t tick = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_DAC_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM2_Init(void);
-static void MX_TIM5_Init(void);
 /* USER CODE BEGIN PFP */
-
+void SendData(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -137,14 +126,15 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USB_DEVICE_Init();
   MX_ADC1_Init();
   MX_DAC_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
-	MX_TIM5_Init();
   /* USER CODE BEGIN 2 */
-
+	tx_number = sizeof(tx_data);
+	rx_number = sizeof(rx_data);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -154,10 +144,10 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		uint8_t buff[30];
-		memcpy(&buff,&tx_data,sizeof(tx_data));
-		USBD_CUSTOM_HID_SendReport_FS(buff, sizeof(tx_data));
-		HAL_Delay(500);
+//		uint8_t buff[30];
+//		memcpy(&buff,&tx_data,sizeof(tx_data));
+//		USBD_CUSTOM_HID_SendReport_FS(buff, sizeof(tx_data));
+//		HAL_Delay(500);
 //		if(tx_data < 'z')
 //		{
 //			tx_data++;
@@ -235,13 +225,13 @@ static void MX_ADC1_Init(void)
   hadc1.Instance = ADC1;
   hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc1.Init.ScanConvMode = DISABLE;
+  hadc1.Init.ScanConvMode = ENABLE;
   hadc1.Init.ContinuousConvMode = DISABLE;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.NbrOfConversion = 4;
   hadc1.Init.DMAContinuousRequests = DISABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
@@ -253,6 +243,30 @@ static void MX_ADC1_Init(void)
   sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = 1;
   sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
+  */
+  sConfig.Channel = ADC_CHANNEL_3;
+  sConfig.Rank = 2;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
+  */
+  sConfig.Channel = ADC_CHANNEL_7;
+  sConfig.Rank = 3;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
+  */
+  sConfig.Channel = ADC_CHANNEL_9;
+  sConfig.Rank = 4;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -421,34 +435,19 @@ static void MX_TIM2_Init(void)
 
 }
 
-/**
-  * @brief TIM5 Initialization Function
-  * @param None
-  * @retval None
+/** 
+  * Enable DMA controller clock
   */
-static void MX_TIM5_Init(void)
+static void MX_DMA_Init(void) 
 {
 
-  /* USER CODE BEGIN TIM5_Init 0 */
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA2_CLK_ENABLE();
 
-  /* USER CODE END TIM5_Init 0 */
-
-  /* USER CODE BEGIN TIM5_Init 1 */
-
-  /* USER CODE END TIM5_Init 1 */
-  htim5.Instance = TIM5;
-  htim5.Init.Prescaler = 0;
-  htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim5.Init.Period = 33599999;
-  htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim5.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_OnePulse_Init(&htim5, TIM_OPMODE_SINGLE) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM5_Init 2 */
-
-  /* USER CODE END TIM5_Init 2 */
+  /* DMA interrupt init */
+  /* DMA2_Stream0_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
 
 }
 
@@ -470,48 +469,48 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, DO7_Pin|DO6_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, DO6_Pin|DO7_Pin|DO5_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, DO0_Pin|DO1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(DO0_GPIO_Port, DO0_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, DO2_Pin|DO3_Pin|DO4_Pin|DO5_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, DO1_Pin|DO2_Pin|DO3_Pin|DO4_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : DO7_Pin DO6_Pin */
-  GPIO_InitStruct.Pin = DO7_Pin|DO6_Pin;
+  /*Configure GPIO pins : DO6_Pin DO7_Pin DO5_Pin */
+  GPIO_InitStruct.Pin = DO6_Pin|DO7_Pin|DO5_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : DI0_Pin DI1_Pin DI5_Pin */
-  GPIO_InitStruct.Pin = DI0_Pin|DI1_Pin|DI5_Pin;
+  /*Configure GPIO pins : DI0_Pin DI1_Pin DI4_Pin */
+  GPIO_InitStruct.Pin = DI0_Pin|DI1_Pin|DI4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : DI2_Pin DI3_Pin DI4_Pin */
-  GPIO_InitStruct.Pin = DI2_Pin|DI3_Pin|DI4_Pin;
+  /*Configure GPIO pins : DI2_Pin DI3_Pin */
+  GPIO_InitStruct.Pin = DI2_Pin|DI3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : DI6_Pin DI7_Pin */
-  GPIO_InitStruct.Pin = DI6_Pin|DI7_Pin;
+  /*Configure GPIO pins : DI5_Pin DI6_Pin DI7_Pin */
+  GPIO_InitStruct.Pin = DI5_Pin|DI6_Pin|DI7_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : DO0_Pin DO1_Pin */
-  GPIO_InitStruct.Pin = DO0_Pin|DO1_Pin;
+  /*Configure GPIO pin : DO0_Pin */
+  GPIO_InitStruct.Pin = DO0_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+  HAL_GPIO_Init(DO0_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : DO2_Pin DO3_Pin DO4_Pin DO5_Pin */
-  GPIO_InitStruct.Pin = DO2_Pin|DO3_Pin|DO4_Pin|DO5_Pin;
+  /*Configure GPIO pins : DO1_Pin DO2_Pin DO3_Pin DO4_Pin */
+  GPIO_InitStruct.Pin = DO1_Pin|DO2_Pin|DO3_Pin|DO4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -520,7 +519,12 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void SendData(void)
+{
+		uint8_t buff[sizeof(tx_data)];
+		memcpy(&buff,&tx_data,sizeof(tx_data));
+		USBD_CUSTOM_HID_SendReport_FS(buff, sizeof(tx_data));
+}
 /* USER CODE END 4 */
 
 /**

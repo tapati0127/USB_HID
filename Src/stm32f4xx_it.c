@@ -42,12 +42,24 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-
+extern uint16_t tick;
+extern ADC_HandleTypeDef hadc1;
+extern uint16_t adc_value[4];
+extern struct tx tx_data;
+struct tx {
+	char header[16];//  = {'T','R','I','E','N','L','O','N','G','T','I','N','H','0','0','0'}
+	uint16_t total_size;
+	uint16_t DI;
+	uint16_t ADC1_value;
+	uint16_t ADC2_value;
+	uint16_t ADC3_value;
+	uint16_t ADC4_value;
+};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
-
+extern void SendData(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -57,7 +69,7 @@
 
 /* External variables --------------------------------------------------------*/
 extern PCD_HandleTypeDef hpcd_USB_OTG_FS;
-extern TIM_HandleTypeDef htim5;
+extern DMA_HandleTypeDef hdma_adc1;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -183,11 +195,19 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
-
+	tick++;
+	if(tick==500)
+	{
+		tick = 0;
+		HAL_ADC_Start(&hadc1);
+		HAL_ADC_Start_DMA(&hadc1,(uint32_t*)(tx_data.ADC1_value),4);
+		tx_data.DI = (HAL_GPIO_ReadPin(DI7_GPIO_Port,DI7_Pin)<<7) | (HAL_GPIO_ReadPin(DI6_GPIO_Port,DI6_Pin)<<6)| (HAL_GPIO_ReadPin(DI5_GPIO_Port,DI5_Pin)<<5)| (HAL_GPIO_ReadPin(DI4_GPIO_Port,DI4_Pin)<<4)| (HAL_GPIO_ReadPin(DI3_GPIO_Port,DI3_Pin)<<3)| (HAL_GPIO_ReadPin(DI2_GPIO_Port,DI2_Pin)<<2)| (HAL_GPIO_ReadPin(DI1_GPIO_Port,DI1_Pin)<<1)| (HAL_GPIO_ReadPin(DI0_GPIO_Port,DI0_Pin)<<0);
+		SendData();
+	}
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
-
+	
   /* USER CODE END SysTick_IRQn 1 */
 }
 
@@ -199,17 +219,17 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
-  * @brief This function handles TIM5 global interrupt.
+  * @brief This function handles DMA2 stream0 global interrupt.
   */
-void TIM5_IRQHandler(void)
+void DMA2_Stream0_IRQHandler(void)
 {
-  /* USER CODE BEGIN TIM5_IRQn 0 */
+  /* USER CODE BEGIN DMA2_Stream0_IRQn 0 */
 
-  /* USER CODE END TIM5_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim5);
-  /* USER CODE BEGIN TIM5_IRQn 1 */
+  /* USER CODE END DMA2_Stream0_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_adc1);
+  /* USER CODE BEGIN DMA2_Stream0_IRQn 1 */
 
-  /* USER CODE END TIM5_IRQn 1 */
+  /* USER CODE END DMA2_Stream0_IRQn 1 */
 }
 
 /**
