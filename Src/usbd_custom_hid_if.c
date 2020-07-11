@@ -33,22 +33,20 @@
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 extern struct rx {
-	char header[16];//  = {'T','R','I','E','N','L','O','N','G','T','I','N','H','0','0','0'}
-	uint16_t total_size;
-	uint16_t DO;
-	float DAC1_voltage,DAC2_voltage;
-	uint16_t pwm1_fre,pwm2_fre;
-	float pwm1_duty,pwm2_duty;
-} rx_data;
-
+	char IDENTIFIER[16];
+	uint16_t HEADER_SIZE;
+	uint16_t DATA_SIZE;
+	uint8_t DO[8];
+	float DAC_VOLTAGE[2];
+	uint16_t PWM_FRE[2];
+	uint16_t PWM_DUTY[2];
+} rx_data; 
 struct tx {
-	char header[16];//  = {'T','R','I','E','N','L','O','N','G','T','I','N','H','0','0','0'}
-	uint16_t total_size;
-	uint16_t DI;
-	uint16_t ADC1_value;
-	uint16_t ADC2_value;
-	uint16_t ADC3_value;
-	uint16_t ADC4_value;
+	char IDENTIFIER[16];
+	uint16_t HEADER_SIZE;
+	uint16_t DATA_SIZE;
+	uint8_t DI[8];
+	float ADC_VOLTAGE[4];
 };
 extern struct tx tx_data;
 extern ADC_HandleTypeDef hadc1;
@@ -240,18 +238,18 @@ void USB_RX_Interrupt(void)
 	USBD_CUSTOM_HID_HandleTypeDef *usb = (USBD_CUSTOM_HID_HandleTypeDef *) hUsbDeviceFS.pClassData;
 	memcpy(&rx_data,usb->Report_buf,sizeof(rx_data));
 	
-	HAL_GPIO_WritePin(DO0_GPIO_Port, DO0_Pin, rx_data.DO & 0x01);
-	HAL_GPIO_WritePin(DO1_GPIO_Port, DO1_Pin, (rx_data.DO >> 1) & 0x01);
-	HAL_GPIO_WritePin(DO2_GPIO_Port, DO2_Pin, (rx_data.DO >> 2) & 0x01);
-	HAL_GPIO_WritePin(DO3_GPIO_Port, DO3_Pin, (rx_data.DO >> 3) & 0x01);
-	HAL_GPIO_WritePin(DO4_GPIO_Port, DO4_Pin, (rx_data.DO >> 4) & 0x01);
-	HAL_GPIO_WritePin(DO5_GPIO_Port, DO5_Pin, (rx_data.DO >> 5) & 0x01);
-	HAL_GPIO_WritePin(DO6_GPIO_Port, DO6_Pin, (rx_data.DO >> 6) & 0x01);
-	HAL_GPIO_WritePin(DO7_GPIO_Port, DO7_Pin, (rx_data.DO >> 7) & 0x01);
+	HAL_GPIO_WritePin(DO0_GPIO_Port, DO0_Pin, rx_data.DO[0]);
+	HAL_GPIO_WritePin(DO1_GPIO_Port, DO1_Pin, rx_data.DO[1]);
+	HAL_GPIO_WritePin(DO2_GPIO_Port, DO2_Pin, rx_data.DO[2]);
+	HAL_GPIO_WritePin(DO3_GPIO_Port, DO3_Pin, rx_data.DO[3]);
+	HAL_GPIO_WritePin(DO4_GPIO_Port, DO4_Pin, rx_data.DO[4]);
+	HAL_GPIO_WritePin(DO5_GPIO_Port, DO5_Pin, rx_data.DO[5]);
+	HAL_GPIO_WritePin(DO6_GPIO_Port, DO6_Pin, rx_data.DO[6]);
+	HAL_GPIO_WritePin(DO7_GPIO_Port, DO7_Pin, rx_data.DO[7]);
 	
-	HAL_DAC_SetValue(&hdac,1, DAC_ALIGN_12B_R, (rx_data.DAC1_voltage*4096/3.3));
+	HAL_DAC_SetValue(&hdac,1, DAC_ALIGN_12B_R,(rx_data.DAC_VOLTAGE[0]*4096/3.3));
 	HAL_DAC_Start(&hdac, 1);
-	HAL_DAC_SetValue(&hdac,2, DAC_ALIGN_12B_R, rx_data.DAC2_voltage*4096/3.3);
+	HAL_DAC_SetValue(&hdac,2, DAC_ALIGN_12B_R, rx_data.DAC_VOLTAGE[1]*4096/3.3);
 	HAL_DAC_Start(&hdac, 2);
 	
 	HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
@@ -260,11 +258,11 @@ void USB_RX_Interrupt(void)
 	sConfigOC.OCMode = TIM_OCMODE_PWM1;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-	htim1.Init.Period = 168000000/rx_data.pwm1_fre - 1;
-	sConfigOC.Pulse = (htim1.Init.Period+1)*rx_data.pwm1_duty/100;
+	htim1.Init.Period = 168000000/rx_data.PWM_FRE[0] - 1;
+	sConfigOC.Pulse = (htim1.Init.Period+1)*rx_data.PWM_DUTY[0]/100;
 	HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1);
-	htim2.Init.Period = 84000000/rx_data.pwm2_fre - 1;
-  sConfigOC.Pulse = (htim2.Init.Period+1)*rx_data.pwm2_duty/100;
+	htim2.Init.Period = 84000000/rx_data.PWM_FRE[1]- 1;
+  sConfigOC.Pulse = (htim2.Init.Period+1)*rx_data.PWM_DUTY[1]/100;
 	HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1);
 	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);

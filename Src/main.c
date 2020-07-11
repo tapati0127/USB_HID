@@ -53,32 +53,31 @@ TIM_HandleTypeDef htim2;
 /* USER CODE BEGIN PV */
 //uint8_t tx_data = 'a';
 struct rx {
-	char header[16];//  = {'T','R','I','E','N','L','O','N','G','T','I','N','H','0','0','0'}
-	uint16_t total_size;
-	uint16_t DO;
-	float DAC1_voltage,DAC2_voltage;
-	uint16_t pwm1_fre,pwm2_fre;
-	float pwm1_duty,pwm2_duty;
+	char IDENTIFIER[16];
+	uint16_t HEADER_SIZE;
+	uint16_t DATA_SIZE;
+	uint8_t DO[8];
+	float DAC_VOLTAGE[2];
+	uint16_t PWM_FRE[2];
+	uint16_t PWM_DUTY[2];
 } rx_data;
 
-uint16_t adc_value[4];
-
 struct tx {
-	char header[16];//  = {'T','R','I','E','N','L','O','N','G','T','I','N','H','0','0','0'}
-	uint16_t total_size;
-	uint16_t DI;
-	uint16_t ADC1_value;
-	uint16_t ADC2_value;
-	uint16_t ADC3_value;
-	uint16_t ADC4_value;
+	char IDENTIFIER[16];
+	uint16_t HEADER_SIZE;
+	uint16_t DATA_SIZE;
+	uint8_t DI[8];
+	float ADC_VOLTAGE[4];
 };
 struct tx tx_data = {
 	{'T','R','I','E','N','L','O','N','G','T','I','N','H','0','0','0'},
-	28
+	20,
+	24
 };
 int tx_number;
 int rx_number;
 uint16_t tick = 0;
+uint16_t adc_value[4];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -135,6 +134,36 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	tx_number = sizeof(tx_data);
 	rx_number = sizeof(rx_data);
+	
+	
+	HAL_GPIO_WritePin(DO0_GPIO_Port, DO0_Pin, 1);
+	HAL_GPIO_WritePin(DO1_GPIO_Port, DO1_Pin, 1);
+	HAL_GPIO_WritePin(DO2_GPIO_Port, DO2_Pin, 1);
+	HAL_GPIO_WritePin(DO3_GPIO_Port, DO3_Pin, 1);
+	HAL_GPIO_WritePin(DO4_GPIO_Port, DO4_Pin, 1);
+	HAL_GPIO_WritePin(DO5_GPIO_Port, DO5_Pin, 1);
+	HAL_GPIO_WritePin(DO6_GPIO_Port, DO6_Pin, 1);
+	HAL_GPIO_WritePin(DO7_GPIO_Port, DO7_Pin, 1);
+	
+	HAL_DAC_SetValue(&hdac,1, DAC_ALIGN_12B_R,(1*4096/3.3));
+	HAL_DAC_Start(&hdac, 1);
+	HAL_DAC_SetValue(&hdac,2, DAC_ALIGN_12B_R, 2.2*4096/3.3);
+	HAL_DAC_Start(&hdac, 2);
+	
+	HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
+	HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
+	TIM_OC_InitTypeDef sConfigOC = {0};
+	sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+	htim1.Init.Period = 168000000/10000 - 1;
+	sConfigOC.Pulse = (htim1.Init.Period+1)*50/100;
+	HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1);
+	htim2.Init.Period = 84000000/10000- 1;
+  sConfigOC.Pulse = (htim2.Init.Period+1)*80/100;
+	HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1);
+	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -487,19 +516,19 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pins : DI0_Pin DI1_Pin DI4_Pin */
   GPIO_InitStruct.Pin = DI0_Pin|DI1_Pin|DI4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : DI2_Pin DI3_Pin */
   GPIO_InitStruct.Pin = DI2_Pin|DI3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : DI5_Pin DI6_Pin DI7_Pin */
   GPIO_InitStruct.Pin = DI5_Pin|DI6_Pin|DI7_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
   /*Configure GPIO pin : DO0_Pin */
