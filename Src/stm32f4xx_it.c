@@ -197,8 +197,8 @@ void SysTick_Handler(void)
 	if(tick==500)
 	{
 		tick = 0;
-		HAL_ADC_Start(&hadc1);
-		HAL_ADC_Start_DMA(&hadc1,(uint32_t*)adc_value,4);
+		//HAL_ADC_Start(&hadc1);
+		//HAL_ADC_Start_DMA(&hadc1,(uint32_t*)adc_value,4);
 		tx_data.ADC_VOLTAGE[0] = adc_value[0]*3.3/4096;
 		tx_data.ADC_VOLTAGE[1] = adc_value[1]*3.3/4096;
 		tx_data.ADC_VOLTAGE[2] = adc_value[2]*3.3/4096;

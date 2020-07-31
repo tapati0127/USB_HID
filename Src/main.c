@@ -78,6 +78,7 @@ int tx_number;
 int rx_number;
 uint16_t tick = 0;
 uint16_t adc_value[4];
+uint8_t buff[44];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -136,14 +137,14 @@ int main(void)
 	rx_number = sizeof(rx_data);
 	
 	
-	HAL_GPIO_WritePin(DO0_GPIO_Port, DO0_Pin, 1);
-	HAL_GPIO_WritePin(DO1_GPIO_Port, DO1_Pin, 1);
-	HAL_GPIO_WritePin(DO2_GPIO_Port, DO2_Pin, 1);
-	HAL_GPIO_WritePin(DO3_GPIO_Port, DO3_Pin, 1);
-	HAL_GPIO_WritePin(DO4_GPIO_Port, DO4_Pin, 1);
-	HAL_GPIO_WritePin(DO5_GPIO_Port, DO5_Pin, 1);
-	HAL_GPIO_WritePin(DO6_GPIO_Port, DO6_Pin, 1);
-	HAL_GPIO_WritePin(DO7_GPIO_Port, DO7_Pin, 1);
+	HAL_GPIO_WritePin(DO0_GPIO_Port, DO0_Pin, 0);
+	HAL_GPIO_WritePin(DO1_GPIO_Port, DO1_Pin, 0);
+	HAL_GPIO_WritePin(DO2_GPIO_Port, DO2_Pin, 0);
+	HAL_GPIO_WritePin(DO3_GPIO_Port, DO3_Pin, 0);
+	HAL_GPIO_WritePin(DO4_GPIO_Port, DO4_Pin, 0);
+	HAL_GPIO_WritePin(DO5_GPIO_Port, DO5_Pin, 0);
+	HAL_GPIO_WritePin(DO6_GPIO_Port, DO6_Pin, 0);
+	HAL_GPIO_WritePin(DO7_GPIO_Port, DO7_Pin, 0);
 	
 	HAL_DAC_SetValue(&hdac,1, DAC_ALIGN_12B_R,(1*4096/3.3));
 	HAL_DAC_Start(&hdac, 1);
@@ -164,6 +165,8 @@ int main(void)
 	HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1);
 	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+	
+	HAL_ADC_Start_DMA(&hadc1,(uint32_t*)adc_value,4);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -261,7 +264,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc1.Init.NbrOfConversion = 4;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.DMAContinuousRequests = ENABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
@@ -513,20 +516,26 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : DI0_Pin DI1_Pin DI4_Pin */
-  GPIO_InitStruct.Pin = DI0_Pin|DI1_Pin|DI4_Pin;
+  /*Configure GPIO pin : DI0_Pin */
+  GPIO_InitStruct.Pin = DI0_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(DI0_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : DI1_Pin DI2_Pin DI5_Pin */
+  GPIO_InitStruct.Pin = DI1_Pin|DI2_Pin|DI5_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : DI2_Pin DI3_Pin */
-  GPIO_InitStruct.Pin = DI2_Pin|DI3_Pin;
+  /*Configure GPIO pins : DI3_Pin DI4_Pin */
+  GPIO_InitStruct.Pin = DI3_Pin|DI4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : DI5_Pin DI6_Pin DI7_Pin */
-  GPIO_InitStruct.Pin = DI5_Pin|DI6_Pin|DI7_Pin;
+  /*Configure GPIO pins : DI6_Pin DI7_Pin */
+  GPIO_InitStruct.Pin = DI6_Pin|DI7_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
@@ -550,9 +559,9 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void SendData(void)
 {
-		uint8_t buff[sizeof(tx_data)];
-		memcpy(&buff,&tx_data,sizeof(tx_data));
-		USBD_CUSTOM_HID_SendReport_FS(buff, sizeof(tx_data));
+
+		memcpy(buff,&tx_data,44);
+		USBD_CUSTOM_HID_SendReport_FS(buff, 44);
 }
 /* USER CODE END 4 */
 
