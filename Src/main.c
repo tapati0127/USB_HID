@@ -137,34 +137,35 @@ int main(void)
 	rx_number = sizeof(rx_data);
 	
 	
-	HAL_GPIO_WritePin(DO0_GPIO_Port, DO0_Pin, 0);
-	HAL_GPIO_WritePin(DO1_GPIO_Port, DO1_Pin, 0);
-	HAL_GPIO_WritePin(DO2_GPIO_Port, DO2_Pin, 0);
-	HAL_GPIO_WritePin(DO3_GPIO_Port, DO3_Pin, 0);
-	HAL_GPIO_WritePin(DO4_GPIO_Port, DO4_Pin, 0);
-	HAL_GPIO_WritePin(DO5_GPIO_Port, DO5_Pin, 0);
-	HAL_GPIO_WritePin(DO6_GPIO_Port, DO6_Pin, 0);
-	HAL_GPIO_WritePin(DO7_GPIO_Port, DO7_Pin, 0);
-	
-	HAL_DAC_SetValue(&hdac,1, DAC_ALIGN_12B_R,(1*4096/3.3));
-	HAL_DAC_Start(&hdac, 1);
-	HAL_DAC_SetValue(&hdac,2, DAC_ALIGN_12B_R, 2.2*4096/3.3);
-	HAL_DAC_Start(&hdac, 2);
-	
-	HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
-	HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
-	TIM_OC_InitTypeDef sConfigOC = {0};
-	sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-	htim1.Init.Period = 168000000/10000 - 1;
-	sConfigOC.Pulse = (htim1.Init.Period+1)*50/100;
-	HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1);
-	htim2.Init.Period = 84000000/10000- 1;
-  sConfigOC.Pulse = (htim2.Init.Period+1)*80/100;
-	HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1);
-	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+//	HAL_GPIO_WritePin(DO0_GPIO_Port, DO0_Pin, 1);
+//	HAL_GPIO_WritePin(DO1_GPIO_Port, DO1_Pin, 1);
+//	HAL_GPIO_WritePin(DO2_GPIO_Port, DO2_Pin, 1);
+//	HAL_GPIO_WritePin(DO3_GPIO_Port, DO3_Pin, 1);
+//	HAL_GPIO_WritePin(DO4_GPIO_Port, DO4_Pin, 1);
+//	HAL_GPIO_WritePin(DO5_GPIO_Port, DO5_Pin, 1);
+//	HAL_GPIO_WritePin(DO6_GPIO_Port, DO6_Pin, 1);
+//	HAL_GPIO_WritePin(DO7_GPIO_Port, DO7_Pin, 1);
+//	
+	HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
+	HAL_DAC_Start(&hdac, DAC_CHANNEL_2);
+	HAL_DAC_SetValue(&hdac,DAC_CHANNEL_1, DAC_ALIGN_12B_R, (uint16_t) (2*4095/3.3));
+	HAL_DAC_SetValue(&hdac,DAC_CHANNEL_2, DAC_ALIGN_12B_R, (uint16_t) (1*4095/3.3));
+//	
+//	
+//	HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
+//	HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
+//	TIM_OC_InitTypeDef sConfigOC = {0};
+//	sConfigOC.OCMode = TIM_OCMODE_PWM1;
+//  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+//  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+//	htim1.Init.Period = 168000000/10000 - 1;
+//	sConfigOC.Pulse = (htim1.Init.Period+1)*50/100;
+//	HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1);
+//	htim2.Init.Period = 84000000/10000- 1;
+//  sConfigOC.Pulse = (htim2.Init.Period+1)*80/100;
+//	HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1);
+//	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+//	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
 	
 	HAL_ADC_Start_DMA(&hadc1,(uint32_t*)adc_value,4);
   /* USER CODE END 2 */
@@ -258,7 +259,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
   hadc1.Init.ScanConvMode = ENABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
@@ -272,17 +273,9 @@ static void MX_ADC1_Init(void)
   }
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
   */
-  sConfig.Channel = ADC_CHANNEL_1;
-  sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
-  */
   sConfig.Channel = ADC_CHANNEL_3;
-  sConfig.Rank = 2;
+  sConfig.Rank = 1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_28CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -290,6 +283,14 @@ static void MX_ADC1_Init(void)
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
   */
   sConfig.Channel = ADC_CHANNEL_7;
+  sConfig.Rank = 2;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
+  */
+  sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = 3;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
@@ -516,23 +517,23 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : DI0_Pin */
-  GPIO_InitStruct.Pin = DI0_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(DI0_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : DI1_Pin DI2_Pin DI5_Pin */
-  GPIO_InitStruct.Pin = DI1_Pin|DI2_Pin|DI5_Pin;
+  /*Configure GPIO pins : DI0_Pin DI1_Pin DI4_Pin */
+  GPIO_InitStruct.Pin = DI0_Pin|DI1_Pin|DI4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : DI3_Pin DI4_Pin */
-  GPIO_InitStruct.Pin = DI3_Pin|DI4_Pin;
+  /*Configure GPIO pins : DI2_Pin DI3_Pin */
+  GPIO_InitStruct.Pin = DI2_Pin|DI3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : DI5_Pin */
+  GPIO_InitStruct.Pin = DI5_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(DI5_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : DI6_Pin DI7_Pin */
   GPIO_InitStruct.Pin = DI6_Pin|DI7_Pin;

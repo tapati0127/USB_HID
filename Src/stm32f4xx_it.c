@@ -194,22 +194,22 @@ void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
 	tick++;
-	if(tick==500)
+	if(tick==10)
 	{
 		tick = 0;
 		//HAL_ADC_Start(&hadc1);
 		//HAL_ADC_Start_DMA(&hadc1,(uint32_t*)adc_value,4);
-		tx_data.ADC_VOLTAGE[0] = adc_value[0]*3.3/4096;
-		tx_data.ADC_VOLTAGE[1] = adc_value[1]*3.3/4096;
-		tx_data.ADC_VOLTAGE[2] = adc_value[2]*3.3/4096;
-		tx_data.ADC_VOLTAGE[3] = adc_value[3]*3.3/4096;
+		tx_data.ADC_VOLTAGE[0] = adc_value[0]*3.3/4095;
+		tx_data.ADC_VOLTAGE[1] = adc_value[1]*3.3/4095;
+		tx_data.ADC_VOLTAGE[2] = adc_value[2]*3.3/4095;
+		tx_data.ADC_VOLTAGE[3] = adc_value[3]*3.3/4095;
 		//tx_data.DI = (HAL_GPIO_ReadPin(DI7_GPIO_Port,DI7_Pin)<<7) | (HAL_GPIO_ReadPin(DI6_GPIO_Port,DI6_Pin)<<6)| (HAL_GPIO_ReadPin(DI5_GPIO_Port,DI5_Pin)<<5)| (HAL_GPIO_ReadPin(DI4_GPIO_Port,DI4_Pin)<<4)| (HAL_GPIO_ReadPin(DI3_GPIO_Port,DI3_Pin)<<3)| (HAL_GPIO_ReadPin(DI2_GPIO_Port,DI2_Pin)<<2)| (HAL_GPIO_ReadPin(DI1_GPIO_Port,DI1_Pin)<<1)| (HAL_GPIO_ReadPin(DI0_GPIO_Port,DI0_Pin)<<0);
 		tx_data.DI[0] = HAL_GPIO_ReadPin(DI0_GPIO_Port,DI0_Pin);
 		tx_data.DI[1] = HAL_GPIO_ReadPin(DI1_GPIO_Port,DI1_Pin);
 		tx_data.DI[2] = HAL_GPIO_ReadPin(DI2_GPIO_Port,DI2_Pin);
 		tx_data.DI[3] = HAL_GPIO_ReadPin(DI3_GPIO_Port,DI3_Pin);
 		tx_data.DI[4] = HAL_GPIO_ReadPin(DI4_GPIO_Port,DI4_Pin);
-		tx_data.DI[5] = HAL_GPIO_ReadPin(DI5_GPIO_Port,DI4_Pin);
+		tx_data.DI[5] = HAL_GPIO_ReadPin(DI5_GPIO_Port,DI5_Pin);
 		tx_data.DI[6] = HAL_GPIO_ReadPin(DI6_GPIO_Port,DI6_Pin);
 		tx_data.DI[7] = HAL_GPIO_ReadPin(DI7_GPIO_Port,DI7_Pin);
 		SendData();

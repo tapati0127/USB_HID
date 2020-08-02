@@ -215,8 +215,11 @@ static int8_t CUSTOM_HID_DeInit_FS(void)
 static int8_t CUSTOM_HID_OutEvent_FS(uint8_t event_idx, uint8_t state)
 {
   /* USER CODE BEGIN 6 */
-  USB_RX_Interrupt();
-  return 0;
+  UNUSED(event_idx);
+  UNUSED(state);
+	USB_RX_Interrupt();
+	USBD_CUSTOM_HID_ReceivePacket(&hUsbDeviceFS);
+  return (USBD_OK);
   /* USER CODE END 6 */
 }
 
@@ -247,10 +250,8 @@ void USB_RX_Interrupt(void)
 	HAL_GPIO_WritePin(DO6_GPIO_Port, DO6_Pin, rx_data.DO[6]);
 	HAL_GPIO_WritePin(DO7_GPIO_Port, DO7_Pin, rx_data.DO[7]);
 	
-	HAL_DAC_SetValue(&hdac,1, DAC_ALIGN_12B_R,(rx_data.DAC_VOLTAGE[0]*4096/3.3));
-	HAL_DAC_Start(&hdac, 1);
-	HAL_DAC_SetValue(&hdac,2, DAC_ALIGN_12B_R, rx_data.DAC_VOLTAGE[1]*4096/3.3);
-	HAL_DAC_Start(&hdac, 2);
+	HAL_DAC_SetValue(&hdac,DAC_CHANNEL_1, DAC_ALIGN_12B_R,(uint16_t)(rx_data.DAC_VOLTAGE[0]*4095/3.3));
+	HAL_DAC_SetValue(&hdac,DAC_CHANNEL_2, DAC_ALIGN_12B_R, (uint16_t)(rx_data.DAC_VOLTAGE[1]*4095/3.3));
 	
 	HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
 	HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
